@@ -1,19 +1,21 @@
 # app/models/trainer.py
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Text, ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
+from typing import Optional
+from uuid import UUID
+from sqlalchemy import DateTime, Text, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from .base import Base
 
 class Trainer(Base):
     __tablename__ = "trainers"
     
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    profile_picture_url = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    deleted_at = Column(DateTime, nullable=True)
+    user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    profile_picture_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     
     # Relationships
     user = relationship("User", foreign_keys=[user_id], back_populates="trainer")

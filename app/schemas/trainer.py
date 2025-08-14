@@ -28,8 +28,7 @@ class TrainerResponse(TrainerBase):
     # Include user information
     user: UserResponse
     
-    class Config:
-        orm_mode = True
+    model_config = {'from_attributes': True}
 
 class TrainerListResponse(BaseModel):
     """Schema for trainer list responses"""
@@ -40,16 +39,14 @@ class TrainerListResponse(BaseModel):
     # Basic user info for lists
     user: UserResponse
     
-    class Config:
-        orm_mode = True
+    model_config = {'from_attributes': True}
 
 class TrainerWithCustomersResponse(TrainerResponse):
     """Schema for trainer with their customers"""
     customers: List["CustomerListResponse"] = []
     
-    class Config:
-        orm_mode = True
+    model_config = {'from_attributes': True}
 
 # Import CustomerListResponse after to avoid circular imports
 from .customer import CustomerListResponse
-TrainerWithCustomersResponse.update_forward_refs()
+TrainerWithCustomersResponse.model_rebuild()

@@ -5,7 +5,11 @@ from fastapi import APIRouter
 from .health import router as health_router
 from .root import router as root_router
 
-# TODO: Import API routes when created
+# Import API routes
+from app.api.auth import router as auth_router
+from app.api.users import router as users_router
+
+# TODO: Import other API routes when created
 # from .api.customers import router as customers_router
 # from .api.sync import router as sync_router
 
@@ -18,7 +22,11 @@ router = APIRouter()
 router.include_router(root_router, tags=["root"])
 router.include_router(health_router, tags=["health"])
 
-# TODO: Include API routes with prefixes when created
+# Include API routes with prefixes
+router.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+router.include_router(users_router, prefix="/api/v1/users", tags=["users"])
+
+# TODO: Include other API routes with prefixes when created
 # router.include_router(customers_router, prefix="/api/v1/customers", tags=["customers"])
 # router.include_router(sync_router, prefix="/api/v1/sync", tags=["sync"])
 

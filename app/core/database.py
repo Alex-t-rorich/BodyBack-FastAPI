@@ -1,18 +1,20 @@
 # app/core/database.py
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from dotenv import load_dotenv
 
 # Import all models to ensure they're registered with Base
-from app.models import Base, User, Customer, Trainer
+from app.models import Base, User, Customer, Trainer, Role, Profile, SessionVolume, SessionTracking, QRCode
+from .config import settings
 
-load_dotenv()
-
-# Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://username:password@localhost:5432/database_name")
-
-engine = create_engine(DATABASE_URL)
+# Database configuration with connection pool settings
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
+    pool_timeout=settings.DB_POOL_TIMEOUT,
+    pool_recycle=settings.DB_POOL_RECYCLE,
+    echo=settings.DEBUG_MODE  # Log SQL queries in debug mode
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():

@@ -1,7 +1,7 @@
 # app/schemas/customer.py
 from datetime import datetime
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from uuid import UUID
 
 from .user import UserResponse
@@ -10,13 +10,14 @@ class CustomerBase(BaseModel):
     """Base schema with common customer fields"""
     trainer_id: Optional[UUID] = None
     profile_picture_url: Optional[str] = None
-    profile_data: Dict[str, Any] = {}
+    profile_data: Optional[Dict[str, Any]] = {}
 
 class CustomerCreate(CustomerBase):
     """Schema for creating a new customer"""
     user_id: UUID
     
-    @validator('profile_data')
+    @field_validator('profile_data')
+    @classmethod
     def validate_profile_data(cls, v):
         if v is None:
             return {}
@@ -28,7 +29,8 @@ class CustomerUpdate(BaseModel):
     profile_picture_url: Optional[str] = None
     profile_data: Optional[Dict[str, Any]] = None
     
-    @validator('profile_data')
+    @field_validator('profile_data')
+    @classmethod
     def validate_profile_data(cls, v):
         if v is None:
             return {}
@@ -45,8 +47,7 @@ class CustomerResponse(CustomerBase):
     user: UserResponse
     trainer: Optional[UserResponse] = None
     
-    class Config:
-        orm_mode = True
+    model_config = {'from_attributes': True}
 
 class CustomerListResponse(BaseModel):
     """Schema for customer list responses"""
@@ -58,8 +59,7 @@ class CustomerListResponse(BaseModel):
     # Basic user info for lists
     user: UserResponse
     
-    class Config:
-        orm_mode = True
+    model_config = {'from_attributes': True}
 
 class CustomerAssignTrainer(BaseModel):
     """Schema for assigning/unassigning trainer to customer"""

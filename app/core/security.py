@@ -31,7 +31,7 @@ def create_access_token(
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
@@ -43,11 +43,52 @@ def decode_access_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
+def create_refresh_token(
+    data: dict, 
+    expires_delta: Optional[timedelta] = None
+) -> str:
+    """Create a JWT refresh token"""
+    to_encode = data.copy()
+    
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+def verify_refresh_token(token: str) -> Optional[dict]:
+    """Verify a refresh token and return its payload"""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "refresh":
+            return None
+        return payload
+    except JWTError:
+        return None
+
 def create_token_for_user(user_id: UUID, email: str, role: Optional[str] = None) -> str:
-    """Create a token for a specific user"""
+    """Create an access token for a specific user"""
     token_data = {
         "sub": str(user_id),
         "email": email,
-        "role": role
+        "role": role,
+        "type": "access"
     }
     return create_access_token(data=token_data)
+
+def create_tokens_for_user(user_id: UUID, email: str, role: Optional[str] = None) -> tuple[str, str]:
+    """Create both access and refresh tokens for a user"""
+    # Create access token
+    access_token = create_token_for_user(user_id, email, role)
+    
+    # Create refresh token
+    refresh_token_data = {
+        "sub": str(user_id),
+        "email": email
+    }
+    refresh_token = create_refresh_token(data=refresh_token_data)
+    
+    return access_token, refresh_token

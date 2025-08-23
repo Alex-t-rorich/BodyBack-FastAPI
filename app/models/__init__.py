@@ -7,6 +7,7 @@ from .profile import Profile
 from .session_volume import SessionVolume
 from .session_tracking import SessionTracking
 from .qr_code import QRCode
+from .password_reset_token import PasswordResetToken
 
 # Export all models for easy imports
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "Profile",
     "SessionVolume",
     "SessionTracking",
-    "QRCode"
+    "QRCode",
+    "PasswordResetToken"
 ]

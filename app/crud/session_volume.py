@@ -233,5 +233,91 @@ class CRUDSessionVolume(CRUDBase[SessionVolume, SessionVolumeCreate, SessionVolu
             db.commit()
             db.refresh(volume)
         return volume
+    
+    def get_with_relations(self, db: Session, *, id: UUID) -> Optional[SessionVolume]:
+        """Get session volume with related data"""
+        return (
+            db.query(SessionVolume)
+            .options(
+                joinedload(SessionVolume.customer),
+                joinedload(SessionVolume.trainer)
+            )
+            .filter(SessionVolume.id == id, SessionVolume.deleted_at.is_(None))
+            .first()
+        )
+    
+    def get_filtered(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        trainer_id: Optional[UUID] = None,
+        customer_id: Optional[UUID] = None,
+        status: Optional[str] = None,
+        start_period: Optional[date] = None,
+        end_period: Optional[date] = None
+    ) -> List[SessionVolume]:
+        """Get session volumes with filters"""
+        query = (
+            db.query(SessionVolume)
+            .options(
+                joinedload(SessionVolume.customer),
+                joinedload(SessionVolume.trainer)
+            )
+            .filter(SessionVolume.deleted_at.is_(None))
+        )
+        
+        if trainer_id:
+            query = query.filter(SessionVolume.trainer_id == trainer_id)
+            
+        if customer_id:
+            query = query.filter(SessionVolume.customer_id == customer_id)
+            
+        if status:
+            query = query.filter(SessionVolume.status == status)
+            
+        if start_period:
+            query = query.filter(SessionVolume.period >= start_period)
+            
+        if end_period:
+            query = query.filter(SessionVolume.period <= end_period)
+        
+        return (
+            query
+            .order_by(SessionVolume.period.desc(), SessionVolume.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    
+    def get_by_period(
+        self,
+        db: Session,
+        *,
+        period: date,
+        trainer_id: Optional[UUID] = None,
+        customer_id: Optional[UUID] = None
+    ) -> List[SessionVolume]:
+        """Get session volumes for a specific period"""
+        query = (
+            db.query(SessionVolume)
+            .options(
+                joinedload(SessionVolume.customer),
+                joinedload(SessionVolume.trainer)
+            )
+            .filter(
+                SessionVolume.period == period,
+                SessionVolume.deleted_at.is_(None)
+            )
+        )
+        
+        if trainer_id:
+            query = query.filter(SessionVolume.trainer_id == trainer_id)
+            
+        if customer_id:
+            query = query.filter(SessionVolume.customer_id == customer_id)
+        
+        return query.order_by(SessionVolume.created_at.desc()).all()
 
 session_volume_crud = CRUDSessionVolume(SessionVolume)

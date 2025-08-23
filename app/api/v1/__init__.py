@@ -10,6 +10,7 @@ from .trainers import router as trainers_router
 from .customers import router as customers_router
 from .qr_codes import router as qr_codes_router
 from .sessions import router as sessions_router
+from .session_volumes import router as session_volumes_router
 
 __all__ = [
     "auth_router",
@@ -18,5 +19,6 @@ __all__ = [
     "trainers_router",
     "customers_router",
     "qr_codes_router",
-    "sessions_router"
+    "sessions_router",
+    "session_volumes_router"
 ]

@@ -6,7 +6,7 @@ from .health import router as health_router
 from .root import router as root_router
 
 # Import API routes
-from app.api.v1 import auth_router, users_router, profiles_router, trainers_router, customers_router, qr_codes_router, sessions_router
+from app.api.v1 import auth_router, users_router, profiles_router, trainers_router, customers_router, qr_codes_router, sessions_router, session_volumes_router
 
 # TODO: Import other API routes when created
 # from .api.customers import router as customers_router
@@ -29,6 +29,7 @@ router.include_router(trainers_router, prefix="/api/v1/trainers", tags=["trainer
 router.include_router(customers_router, prefix="/api/v1/customers", tags=["customers"])
 router.include_router(qr_codes_router, prefix="/api/v1/qr-codes", tags=["qr-codes"])
 router.include_router(sessions_router, prefix="/api/v1/sessions", tags=["sessions"])
+router.include_router(session_volumes_router, prefix="/api/v1/session-volumes", tags=["session-volumes"])
 
 # TODO: Include other API routes with prefixes when created
 # router.include_router(sync_router, prefix="/api/v1/sync", tags=["sync"])

@@ -1,12 +1,12 @@
 # app/crud/session_tracking.py
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, func, desc, Date
+from sqlalchemy import and_, func, desc, Date, distinct
 from uuid import UUID
 from datetime import date, datetime
 
 from app.models.session_tracking import SessionTracking
-from app.schemas.session_tracking import SessionTrackingCreate, SessionTrackingUpdate
+from app.schemas.session_tracking import SessionTrackingCreate, SessionTrackingUpdate, SessionTrackingStats
 from .base import CRUDBase
 
 class CRUDSessionTracking(CRUDBase[SessionTracking, SessionTrackingCreate, SessionTrackingUpdate]):
@@ -181,6 +181,174 @@ class CRUDSessionTracking(CRUDBase[SessionTracking, SessionTrackingCreate, Sessi
                 .scalar() or 0
             )
     
+    def get_with_relations(self, db: Session, *, id: UUID) -> Optional[SessionTracking]:
+        """Get session tracking record with all related data"""
+        return (
+            db.query(SessionTracking)
+            .options(
+                joinedload(SessionTracking.trainer),
+                joinedload(SessionTracking.qr_code).joinedload('user'),
+                joinedload(SessionTracking.session_volume)
+            )
+            .filter(SessionTracking.id == id)
+            .first()
+        )
+    
+    def get_filtered(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        trainer_id: Optional[UUID] = None,
+        customer_id: Optional[UUID] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> List[SessionTracking]:
+        """Get session tracking records with filters"""
+        query = (
+            db.query(SessionTracking)
+            .options(
+                joinedload(SessionTracking.trainer),
+                joinedload(SessionTracking.qr_code).joinedload('user'),
+                joinedload(SessionTracking.session_volume)
+            )
+        )
+        
+        if trainer_id:
+            query = query.filter(SessionTracking.trainer_id == trainer_id)
+            
+        if customer_id:
+            query = query.join(SessionTracking.qr_code).filter(
+                SessionTracking.qr_code.has(user_id=customer_id)
+            )
+            
+        if start_date:
+            query = query.filter(SessionTracking.session_date >= start_date)
+            
+        if end_date:
+            query = query.filter(SessionTracking.session_date <= end_date)
+        
+        return (
+            query
+            .order_by(desc(SessionTracking.session_date), desc(SessionTracking.scan_timestamp))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    
+    def get_by_customer(
+        self,
+        db: Session,
+        *,
+        customer_id: UUID,
+        trainer_id: Optional[UUID] = None,
+        skip: int = 0,
+        limit: int = 100,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> List[SessionTracking]:
+        """Get sessions for a specific customer"""
+        query = (
+            db.query(SessionTracking)
+            .join(SessionTracking.qr_code)
+            .options(
+                joinedload(SessionTracking.trainer),
+                joinedload(SessionTracking.qr_code).joinedload('user'),
+                joinedload(SessionTracking.session_volume)
+            )
+            .filter(SessionTracking.qr_code.has(user_id=customer_id))
+        )
+        
+        if trainer_id:
+            query = query.filter(SessionTracking.trainer_id == trainer_id)
+            
+        if start_date:
+            query = query.filter(SessionTracking.session_date >= start_date)
+            
+        if end_date:
+            query = query.filter(SessionTracking.session_date <= end_date)
+        
+        return (
+            query
+            .order_by(desc(SessionTracking.session_date), desc(SessionTracking.scan_timestamp))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    
+    def get_stats(
+        self,
+        db: Session,
+        *,
+        trainer_id: Optional[UUID] = None,
+        customer_id: Optional[UUID] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> SessionTrackingStats:
+        """Get session tracking statistics"""
+        query = db.query(SessionTracking)
+        
+        if trainer_id:
+            query = query.filter(SessionTracking.trainer_id == trainer_id)
+            
+        if customer_id:
+            query = query.join(SessionTracking.qr_code).filter(
+                SessionTracking.qr_code.has(user_id=customer_id)
+            )
+            
+        if start_date:
+            query = query.filter(SessionTracking.session_date >= start_date)
+            
+        if end_date:
+            query = query.filter(SessionTracking.session_date <= end_date)
+        
+        # Get basic stats
+        total_scans = query.count()
+        
+        if total_scans == 0:
+            return SessionTrackingStats(
+                total_scans=0,
+                unique_days=0,
+                first_scan=None,
+                last_scan=None
+            )
+        
+        # Get unique days
+        unique_days = query.with_entities(distinct(SessionTracking.session_date)).count()
+        
+        # Get first and last scan timestamps
+        scan_times = query.with_entities(
+            func.min(SessionTracking.scan_timestamp).label('first_scan'),
+            func.max(SessionTracking.scan_timestamp).label('last_scan')
+        ).first()
+        
+        return SessionTrackingStats(
+            total_scans=total_scans,
+            unique_days=unique_days,
+            first_scan=scan_times.first_scan,
+            last_scan=scan_times.last_scan
+        )
+    
+    def check_daily_limit(
+        self,
+        db: Session,
+        *,
+        trainer_id: UUID,
+        qr_code_id: UUID,
+        session_date: date
+    ) -> bool:
+        """Check if session already exists for this trainer-customer-date combination"""
+        existing = db.query(SessionTracking).filter(
+            and_(
+                SessionTracking.trainer_id == trainer_id,
+                SessionTracking.qr_code_id == qr_code_id,
+                SessionTracking.session_date == session_date
+            )
+        ).first()
+        
+        return existing is not None
+    
     def get_tracking_stats(
         self,
         db: Session,
@@ -189,7 +357,7 @@ class CRUDSessionTracking(CRUDBase[SessionTracking, SessionTrackingCreate, Sessi
         trainer_id: Optional[UUID] = None,
         qr_code_id: Optional[UUID] = None
     ) -> dict:
-        """Get session tracking statistics"""
+        """Get session tracking statistics (legacy method)"""
         query = db.query(SessionTracking)
         
         if session_volume_id:

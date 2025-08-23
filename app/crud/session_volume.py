@@ -3,6 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, func
 from uuid import UUID
+from datetime import date
 
 from app.models.session_volume import SessionVolume
 from app.models.user import User
@@ -177,5 +178,60 @@ class CRUDSessionVolume(CRUDBase[SessionVolume, SessionVolumeCreate, SessionVolu
         db.commit()
         db.refresh(db_obj)
         return db_obj
+    
+    def get_or_create_for_period(
+        self,
+        db: Session,
+        *,
+        trainer_id: UUID,
+        customer_id: UUID,
+        period: date
+    ) -> SessionVolume:
+        """Get or create session volume for a specific period"""
+        existing = (
+            db.query(SessionVolume)
+            .filter(
+                and_(
+                    SessionVolume.trainer_id == trainer_id,
+                    SessionVolume.customer_id == customer_id,
+                    SessionVolume.period == period,
+                    SessionVolume.deleted_at.is_(None)
+                )
+            )
+            .first()
+        )
+        
+        if existing:
+            return existing
+        
+        # Create new session volume
+        volume_data = SessionVolumeCreate(
+            trainer_id=trainer_id,
+            customer_id=customer_id,
+            period=period,
+            session_count=0
+        )
+        
+        return self.create(db, obj_in=volume_data)
+    
+    def increment_session_count(self, db: Session, *, session_volume_id: UUID) -> SessionVolume:
+        """Increment session count for a volume"""
+        volume = self.get(db, id=session_volume_id)
+        if volume:
+            volume.session_count += 1
+            db.add(volume)
+            db.commit()
+            db.refresh(volume)
+        return volume
+    
+    def decrement_session_count(self, db: Session, *, session_volume_id: UUID) -> SessionVolume:
+        """Decrement session count for a volume (when deleting sessions)"""
+        volume = self.get(db, id=session_volume_id)
+        if volume and volume.session_count > 0:
+            volume.session_count -= 1
+            db.add(volume)
+            db.commit()
+            db.refresh(volume)
+        return volume
 
 session_volume_crud = CRUDSessionVolume(SessionVolume)

@@ -19,6 +19,7 @@ from app.crud.password_reset_token import password_reset_token_crud
 from app.models.user import User
 from app.schemas.auth import (
     Token, 
+    LoginResponse,
     ChangePassword, 
     ForgotPassword, 
     ResetPassword,
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 async def login(
     user_credentials: UserLogin,
     db: Session = Depends(get_db)
@@ -51,11 +52,11 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Check if user is active
+    # Check if user is active (status must be 1)
     if not user_crud.is_active(user):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive or suspended"
         )
     
     # Get role name for token
@@ -71,7 +72,13 @@ async def login(
     return {
         "access_token": access_token, 
         "refresh_token": refresh_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user_id": str(user.id),
+        "email": user.email,
+        "role": role_name,
+        "status": 1 if user.active else 0,  # Convert boolean to 1/0
+        "first_name": user.first_name,
+        "last_name": user.last_name
     }
 
 @router.post("/refresh", response_model=Token)

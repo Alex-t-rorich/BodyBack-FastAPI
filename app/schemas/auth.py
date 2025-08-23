@@ -7,6 +7,18 @@ class Token(BaseModel):
     refresh_token: str | None = None
     token_type: str = "bearer"
 
+class LoginResponse(BaseModel):
+    """Login response with user info"""
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "bearer"
+    user_id: str
+    email: str
+    role: str | None = None
+    status: int  # 1=active, 0=inactive
+    first_name: str | None = None
+    last_name: str | None = None
+
 class TokenData(BaseModel):
     """Token data schema"""
     user_id: str

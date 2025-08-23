@@ -103,7 +103,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
     
     def is_active(self, user: User) -> bool:
-        """Check if user is active"""
+        """Check if user is active (status = 1)"""
         return user.active and user.deleted_at is None
     
     def activate(self, db: Session, *, user: User) -> User:

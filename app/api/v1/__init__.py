@@ -6,9 +6,11 @@ API v1 endpoints
 from .auth import router as auth_router
 from .users import router as users_router
 from .profiles import router as profiles_router
+from .trainers import router as trainers_router
 
 __all__ = [
     "auth_router",
     "users_router", 
-    "profiles_router"
+    "profiles_router",
+    "trainers_router"
 ]

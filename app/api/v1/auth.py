@@ -70,13 +70,13 @@ async def login(
     )
     
     return {
-        "access_token": access_token, 
+        "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "user_id": str(user.id),
+        "user_id": str(user.id),  # Already in JWT token payload (sub)
         "email": user.email,
         "role": role_name,
-        "status": 1 if user.active else 0,  # Convert boolean to 1/0
+        # "status": 1 if user.active else 0,  # Always 1 if login succeeds (checked above)
         "first_name": user.first_name,
         "last_name": user.last_name
     }

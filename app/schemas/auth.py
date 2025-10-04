@@ -12,10 +12,10 @@ class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str | None = None
     token_type: str = "bearer"
-    user_id: str
+    user_id: str  # Already in JWT token payload (sub)
     email: str
     role: str | None = None
-    status: int  # 1=active, 0=inactive
+    # status: int  # Always 1 if login succeeds (checked in endpoint)
     first_name: str | None = None
     last_name: str | None = None
 

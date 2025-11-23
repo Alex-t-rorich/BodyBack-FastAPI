@@ -1,12 +1,15 @@
 # app/api/v1/qr_codes.py
 from datetime import datetime
 from typing import Optional
+from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+import qrcode
 
-from app.core.auth import get_current_active_user, require_trainer_or_admin
+from app.core.auth import get_current_active_user, require_trainer_or_admin, require_admin
 from app.core.database import get_db
 from app.crud.qr_code import qr_code_crud
 from app.crud.user import user_crud
@@ -68,10 +71,9 @@ async def get_my_qr_code(
     else:
         instructions = "This is your unique QR code for system identification."
     
-    # In a production system, qr_url would be generated to create actual QR code image
-    # For example: qr_url = f"/api/v1/qr-codes/{qr_code.token}/image"
-    qr_url = None
-    
+    # Generate QR code image URL
+    qr_url = f"/api/v1/qr-codes/image/{qr_code.token}"
+
     return {
         "token": qr_code.token,
         "qr_url": qr_url,
@@ -156,10 +158,10 @@ async def scan_qr_code(
     
     # Successful scan
     success_message = f"Valid QR code for {user.role_name.lower()} {user.full_name}"
-    
+
     # TODO: Record session tracking entry here when session tracking is implemented
     # This would create a new SessionTracking record linking the trainer and customer
-    
+
     return {
         "valid": True,
         "user_id": str(user.id),
@@ -168,3 +170,121 @@ async def scan_qr_code(
         "message": success_message,
         "scanned_at": scan_time.isoformat()
     }
+
+@router.get("/image/{token}")
+async def get_qr_code_image(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Generate and return QR code image for a given token.
+
+    This endpoint generates a PNG image of the QR code that can be displayed
+    in mobile apps or web browsers. The QR code encodes the token string.
+
+    No authentication required - QR codes are meant to be publicly displayable.
+    The token itself provides the security.
+    """
+    # Verify the token exists in database
+    qr_code = qr_code_crud.get_by_token(db, token=token)
+
+    if not qr_code:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="QR code not found"
+        )
+
+    # Generate QR code image
+    qr = qrcode.QRCode(
+        version=1,  # Controls size (1 is smallest, auto-adjusts)
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,  # Size of each box in pixels
+        border=4,  # Border size in boxes
+    )
+
+    # Add the token data to the QR code
+    qr.add_data(token)
+    qr.make(fit=True)
+
+    # Create an image from the QR code
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # Convert PIL image to bytes
+    img_buffer = BytesIO()
+    img.save(img_buffer, format="PNG")
+    img_buffer.seek(0)
+
+    # Return as streaming response
+    return StreamingResponse(
+        img_buffer,
+        media_type="image/png",
+        headers={
+            "Content-Disposition": f"inline; filename=qrcode_{token[:8]}.png",
+            "Cache-Control": "public, max-age=86400"  # Cache for 24 hours
+        }
+    )
+
+class GenerateQRCodeRequest(BaseModel):
+    """Schema for generating QR code by email"""
+    email: str
+
+class GenerateQRCodeResponse(BaseModel):
+    """Schema for QR code generation response"""
+    message: str
+    token: str
+    qr_url: str
+    user_email: str
+    user_name: str
+    created: bool  # True if newly created, False if already existed
+
+@router.post("/generate", response_model=GenerateQRCodeResponse)
+async def generate_qr_code_for_user(
+    request: GenerateQRCodeRequest,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate or retrieve QR code for a user by email (Admin only).
+
+    This endpoint is used to backfill QR codes for existing users who don't have one,
+    or to retrieve the QR code for users who already have one.
+
+    Returns:
+    - The QR code token
+    - URL to retrieve the QR code image
+    - Whether it was newly created or already existed
+    """
+    # Find user by email
+    user = user_crud.get_by_email(db, email=request.email)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with email '{request.email}' not found"
+        )
+
+    # Check if user already has a QR code
+    existing_qr = qr_code_crud.get_by_user(db, user_id=user.id)
+
+    if existing_qr:
+        # User already has a QR code
+        return {
+            "message": f"QR code already exists for {user.full_name}",
+            "token": existing_qr.token,
+            "qr_url": f"/api/v1/qr-codes/image/{existing_qr.token}",
+            "user_email": user.email,
+            "user_name": user.full_name,
+            "created": False
+        }
+    else:
+        # Create new QR code
+        new_qr = qr_code_crud.create_for_user(db, user_id=user.id)
+
+        return {
+            "message": f"QR code created for {user.full_name}",
+            "token": new_qr.token,
+            "qr_url": f"/api/v1/qr-codes/image/{new_qr.token}",
+            "user_email": user.email,
+            "user_name": user.full_name,
+            "created": True
+        }

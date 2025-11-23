@@ -10,10 +10,9 @@ from .base import Base
 
 class Customer(Base):
     __tablename__ = "customers"
-    
+
     user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     trainer_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    profile_picture_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     profile_data: Mapped[dict] = mapped_column(JSONB, nullable=False, default={})
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

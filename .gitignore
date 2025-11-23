@@ -194,3 +194,7 @@ Thumbs.db
 *.temp
 .tmp/
 temp/
+
+# Personal testing scripts folder
+scratch/
+personal_tests/

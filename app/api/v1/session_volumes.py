@@ -116,19 +116,22 @@ async def create_session_volume(
         )
     
     # Check for existing volume for same trainer-customer-period
-    existing = session_volume_crud.get_or_create_for_period(
-        db,
-        trainer_id=volume_data.trainer_id,
-        customer_id=volume_data.customer_id,
-        period=volume_data.period
-    )
-    
-    if existing and existing.session_count > 0:
+    from sqlalchemy import and_
+    existing = db.query(session_volume_crud.model).filter(
+        and_(
+            session_volume_crud.model.trainer_id == volume_data.trainer_id,
+            session_volume_crud.model.customer_id == volume_data.customer_id,
+            session_volume_crud.model.period == volume_data.period,
+            session_volume_crud.model.deleted_at.is_(None)
+        )
+    ).first()
+
+    if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Session volume already exists for this trainer-customer-period"
         )
-    
+
     return session_volume_crud.create(db, obj_in=volume_data)
 
 @router.get("/{volume_id}", response_model=SessionVolumeResponse)

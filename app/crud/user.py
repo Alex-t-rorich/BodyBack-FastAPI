@@ -46,21 +46,47 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """Create user with hashed password and role"""
+        from app.models.trainer import Trainer
+        from app.models.customer import Customer
+        from app.crud.qr_code import qr_code_crud
+
         create_data = obj_in.dict()
         create_data["password_hash"] = get_password_hash(create_data.pop("password"))
         role_name = create_data.pop("role", None)
-        
+
         # Get role_id from role name
         if role_name:
             role = db.query(Role).filter(Role.name == role_name).first()
             if role:
                 create_data["role_id"] = role.id
-        
+
         # Create user with role_id
         db_obj = User(**create_data)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+
+        # Create corresponding trainer or customer record based on role
+        if role_name == "Trainer":
+            trainer = Trainer(
+                user_id=db_obj.id,
+                profile_picture_url=None
+            )
+            db.add(trainer)
+            db.commit()
+        elif role_name == "Customer":
+            customer = Customer(
+                user_id=db_obj.id,
+                trainer_id=None,
+                profile_picture_url=None,
+                profile_data={}
+            )
+            db.add(customer)
+            db.commit()
+
+        # Auto-create QR code for all new users
+        qr_code_crud.create_for_user(db, user_id=db_obj.id)
+
         return db_obj
     
     def set_role(self, db: Session, *, user: User, role_name: str) -> User:

@@ -1,6 +1,3 @@
-# app/core/config.py
-# Add these to your existing config.py
-
 import os
 import logging
 import sys
@@ -69,35 +66,26 @@ settings = Settings()
 
 def setup_logging():
     """Configure logging for the entire application"""
-    
-    # Create formatter
     formatter = logging.Formatter(settings.LOG_FORMAT)
-    
-    # Configure root logger
+
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper()))
-    
-    # Clear existing handlers
     root_logger.handlers.clear()
-    
-    # Console handler
+
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
-    
-    # File handler (if specified)
+
     if settings.LOG_FILE:
         file_handler = logging.FileHandler(settings.LOG_FILE)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
-    
-    # Suppress noisy third-party loggers in production
+
     if not settings.DEBUG_MODE:
         logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
         logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
         logging.getLogger("apscheduler").setLevel(logging.WARNING)
-    
-    # Log configuration
+
     logger = logging.getLogger(__name__)
     logger.info(f"Logging configured - Level: {settings.LOG_LEVEL}")
     if settings.LOG_FILE:

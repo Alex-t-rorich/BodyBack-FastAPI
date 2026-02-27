@@ -1,4 +1,3 @@
-# app/crud/profile.py
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session, joinedload
 from uuid import UUID

@@ -1,4 +1,3 @@
-# app/models/session_tracking.py
 from datetime import datetime, date
 from uuid import UUID, uuid4
 from sqlalchemy import ForeignKey, DateTime, Date, func

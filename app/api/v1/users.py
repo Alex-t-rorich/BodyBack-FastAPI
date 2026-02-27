@@ -1,4 +1,3 @@
-# app/api/users.py
 from typing import List
 from uuid import UUID
 

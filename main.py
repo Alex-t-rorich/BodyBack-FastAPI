@@ -1,28 +1,23 @@
-# main.py
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from app.core.config import settings, setup_logging
 from app.core.database import create_tables
 from app.routes.routes import router
+from app.web.routes import router as web_router
 
-# Setup logging first
 setup_logging()
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     logger.info(f"Starting up {settings.PROJECT_NAME} v{settings.VERSION}")
-    
-    # Create database tables
     create_tables()
     logger.info("Database tables created/verified")
-    
     yield
-    
-    # Shutdown
     logger.info("Application shutdown complete")
 
 # FastAPI app
@@ -34,7 +29,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Include all routes from the main router
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code == 303 and "Location" in exc.headers:
+        return RedirectResponse(url=exc.headers["Location"], status_code=303)
+    from fastapi.exception_handlers import http_exception_handler as default_handler
+    return await default_handler(request, exc)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(web_router)
 app.include_router(router)
 
 if __name__ == "__main__":

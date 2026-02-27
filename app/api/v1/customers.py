@@ -1,4 +1,3 @@
-# app/api/v1/customers.py
 from typing import List, Optional
 from uuid import UUID
 
@@ -261,17 +260,14 @@ async def request_trainer_assignment(
                 detail="Requested user is not a trainer"
             )
     
-    # TODO: In a production system, this would create a trainer request record
-    # that admins can review and approve/deny. For now, we'll return a success message.
-    
     trainer_info = ""
     if request_data.trainer_id:
         trainer_user = user_crud.get(db, id=request_data.trainer_id)
         trainer_info = f" for trainer {trainer_user.first_name} {trainer_user.last_name}"
-    
+
     return {
         "message": f"Trainer assignment request submitted{trainer_info}. An administrator will review your request.",
-        "request_id": None  # Would be actual request ID in production
+        "request_id": None
     }
 
 @router.get("/me/progress", response_model=CustomerProgressResponse)
@@ -309,7 +305,6 @@ async def get_my_progress(
     completed_fields = sum(1 for field in profile_fields if field)
     profile_completion = int((completed_fields / len(profile_fields)) * 100)
     
-    # TODO: Implement session counting when session tracking is fully implemented
     total_sessions = 0
     sessions_this_month = 0
     

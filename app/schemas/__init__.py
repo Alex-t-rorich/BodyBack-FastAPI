@@ -1,4 +1,3 @@
-# app/schemas/__init__.py
 from .user import UserCreate, UserUpdate, UserResponse, UserBase
 from .customer import CustomerCreate, CustomerUpdate, CustomerResponse, CustomerBase
 from .trainer import TrainerCreate, TrainerUpdate, TrainerResponse, TrainerBase

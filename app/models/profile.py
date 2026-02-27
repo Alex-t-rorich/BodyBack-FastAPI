@@ -1,4 +1,3 @@
-# app/models/profile.py
 from datetime import datetime
 from typing import Optional, Any
 from uuid import UUID
@@ -36,13 +35,11 @@ class Profile(Base):
         return bool(self.emergency_contact)
     
     def get_preference(self, key: str, default=None):
-        """Get a specific preference value"""
         if not self.preferences:
             return default
         return self.preferences.get(key, default)
-    
+
     def set_preference(self, key: str, value):
-        """Set a specific preference value"""
         if not self.preferences:
             self.preferences = {}
         self.preferences[key] = value

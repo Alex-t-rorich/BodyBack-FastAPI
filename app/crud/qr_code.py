@@ -1,4 +1,3 @@
-# app/crud/qr_code.py
 from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 from uuid import UUID

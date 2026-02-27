@@ -1,4 +1,3 @@
-# app/models/password_reset_token.py
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 from sqlalchemy import ForeignKey, String, DateTime, func
@@ -25,10 +24,8 @@ class PasswordResetToken(Base):
     
     @property
     def is_expired(self) -> bool:
-        """Check if token has expired"""
         return datetime.utcnow() > self.expires_at
-    
+
     @property
     def is_valid(self) -> bool:
-        """Check if token is valid (not used and not expired)"""
         return not self.used and not self.is_expired

@@ -1,4 +1,3 @@
-# app/crud/__init__.py
 from .user import user_crud
 from .customer import customer_crud
 from .trainer import trainer_crud

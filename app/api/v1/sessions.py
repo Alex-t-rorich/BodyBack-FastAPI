@@ -1,4 +1,3 @@
-# app/api/v1/sessions.py
 from datetime import datetime, date, timedelta
 from typing import Optional, List
 from uuid import UUID

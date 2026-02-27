@@ -1,4 +1,3 @@
-# app/api/v1/trainers.py
 from typing import List
 from uuid import UUID
 
@@ -249,12 +248,8 @@ async def get_my_trainer_stats(
             detail="Trainer record not found"
         )
     
-    # Get customer counts
     total_customers = customer_crud.count_by_trainer(db, trainer_id=current_user.id)
-    active_customers = total_customers  # For now, assume all assigned customers are active
-    
-    # TODO: Implement session counting when session tracking is fully implemented
-    # For now, return placeholder values
+    active_customers = total_customers
     total_sessions = 0
     sessions_this_month = 0
     

@@ -1,4 +1,3 @@
-# app/models/role.py
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 

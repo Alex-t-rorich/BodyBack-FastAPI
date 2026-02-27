@@ -1,4 +1,3 @@
-# app/api/profiles.py
 from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
@@ -161,9 +160,7 @@ async def upload_profile_picture(
         )
     finally:
         file.file.close()
-    
-    # Update profile with file URL
-    # In production, this would be a CDN URL or proper static file serving URL
+
     file_url = f"/static/profile_pictures/{unique_filename}"
     
     profile = profile_crud.get_by_user_id(db, user_id=current_user.id)

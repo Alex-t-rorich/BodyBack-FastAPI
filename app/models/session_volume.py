@@ -1,4 +1,3 @@
-# app/models/session_volume.py
 from datetime import datetime, date
 from uuid import UUID, uuid4
 from sqlalchemy import ForeignKey, Integer, Text, DateTime, Date, func, String, CheckConstraint
@@ -40,50 +39,40 @@ class SessionVolume(Base):
     
     @property
     def is_active(self) -> bool:
-        """Check if session volume record is active (not soft deleted)"""
         return self.deleted_at is None
-    
+
     @property
     def is_draft(self) -> bool:
-        """Check if session volume is in draft status"""
         return self.status == "draft"
-    
+
     @property
     def is_submitted(self) -> bool:
-        """Check if session volume has been submitted"""
         return self.status in ["submitted", "read", "approved", "rejected"]
-    
+
     @property
     def is_approved(self) -> bool:
-        """Check if session volume has been approved"""
         return self.status == "approved"
-    
+
     @property
     def is_rejected(self) -> bool:
-        """Check if session volume has been rejected"""
         return self.status == "rejected"
     
     def submit(self):
-        """Submit the session volume to customer"""
         if self.status == "draft":
             self.status = "submitted"
-    
+
     def mark_as_read(self):
-        """Mark the session volume as read by customer"""
         if self.status == "submitted":
             self.status = "read"
-    
+
     def approve(self):
-        """Approve the session volume"""
         if self.status in ["submitted", "read"]:
             self.status = "approved"
-    
+
     def reject(self):
-        """Reject the session volume"""
         if self.status in ["submitted", "read"]:
             self.status = "rejected"
-    
+
     def reopen(self):
-        """Reopen a rejected volume back to draft"""
         if self.status == "rejected":
             self.status = "draft"

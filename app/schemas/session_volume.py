@@ -1,4 +1,3 @@
-# app/schemas/session_volume.py
 from datetime import datetime, date
 from typing import Optional, Literal
 from pydantic import BaseModel, field_validator

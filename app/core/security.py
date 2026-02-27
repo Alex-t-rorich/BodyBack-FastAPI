@@ -1,4 +1,3 @@
-# app/core/security.py
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 from uuid import UUID
@@ -8,7 +7,6 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-# Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -81,14 +79,12 @@ def create_token_for_user(user_id: UUID, email: str, role: Optional[str] = None)
 
 def create_tokens_for_user(user_id: UUID, email: str, role: Optional[str] = None) -> tuple[str, str]:
     """Create both access and refresh tokens for a user"""
-    # Create access token
     access_token = create_token_for_user(user_id, email, role)
-    
-    # Create refresh token
+
     refresh_token_data = {
         "sub": str(user_id),
         "email": email
     }
     refresh_token = create_refresh_token(data=refresh_token_data)
-    
+
     return access_token, refresh_token

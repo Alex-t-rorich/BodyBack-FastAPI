@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - BodyBack Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Welcome to BodyBack Admin</h1>
+        <p class="lead">Admin dashboard for managing trainers, customers, and sessions.</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="/users" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-person-plus"></i> Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/trainers" class="btn btn-outline-success w-100">
+                            <i class="bi bi-person-badge"></i> Manage Trainers
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/customers" class="btn btn-outline-info w-100">
+                            <i class="bi bi-person-check"></i> Manage Customers
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/sessions" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-calendar-check"></i> View Sessions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Cards -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-people"></i> Users</h5>
+                <p class="card-text">Manage user accounts, roles, and permissions.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person-badge"></i> Trainers</h5>
+                <p class="card-text">View and manage trainer profiles and assignments.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-calendar-check"></i> Sessions</h5>
+                <p class="card-text">Track training sessions and volume data.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

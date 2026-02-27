@@ -1,4 +1,3 @@
-# app/models/user.py
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import String, DateTime, Boolean, Text, Integer, ForeignKey
@@ -49,21 +48,16 @@ class User(Base):
     
     @property
     def role_name(self) -> Optional[str]:
-        """Get role name"""
         return self.role.name if self.role else None
-    
+
     def has_role(self, role_name: str) -> bool:
-        """Check if user has a specific role"""
         return bool(self.role and self.role.name == role_name)
-    
+
     def is_trainer(self) -> bool:
-        """Check if user is a trainer"""
         return self.has_role("Trainer")
-    
+
     def is_customer(self) -> bool:
-        """Check if user is a customer"""
         return self.has_role("Customer")
-    
+
     def is_admin(self) -> bool:
-        """Check if user is an admin"""
         return self.has_role("Admin")

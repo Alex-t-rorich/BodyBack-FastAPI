@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}{{ trainer.user.first_name }} {{ trainer.user.last_name }} - BodyBack Admin{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/trainers">Trainers</a></li>
+        <li class="breadcrumb-item active">{{ trainer.user.first_name }} {{ trainer.user.last_name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-person-badge"></i> {{ trainer.user.first_name }} {{ trainer.user.last_name }}
+            {% if trainer.user.active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+        </h1>
+    </div>
+</div>
+
+<!-- Trainer Info Cards -->
+<div class="row mb-4">
+    <!-- Contact Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-circle"></i> Contact Information</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Email:</strong>
+                        <span>{{ trainer.user.email }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Phone:</strong>
+                        <span>{{ trainer.user.phone_number or 'Not provided' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Location:</strong>
+                        <span>{{ trainer.user.location or 'Not provided' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Role:</strong>
+                        <span class="badge bg-primary">{{ trainer.user.role.name if trainer.user.role else 'No Role' }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Statistics</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Active Customers:</strong>
+                        <span class="badge bg-info rounded-pill">{{ customers|length }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Sessions:</strong>
+                        <span class="badge bg-primary rounded-pill">{{ total_sessions }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Joined:</strong>
+                        <span>{{ trainer.created_at.strftime('%B %d, %Y') if trainer.created_at else 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Account Status:</strong>
+                        {% if trainer.user.active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Assigned Customers ({{ customers|length }})</h5>
+                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#assignCustomerModal">
+                    <i class="bi bi-plus-circle"></i> Assign Customer
+                </button>
+            </div>
+            <div class="card-body">
+                {% if customers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Location</th>
+                                <th>Sessions</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in customers %}
+                            <tr>
+                                <td>
+                                    <strong>{{ customer.user.first_name }} {{ customer.user.last_name }}</strong>
+                                </td>
+                                <td>{{ customer.user.email }}</td>
+                                <td>{{ customer.user.phone_number or '-' }}</td>
+                                <td>{{ customer.user.location or '-' }}</td>
+                                <td class="text-center">
+                                    {% set session_count = session_counts.get(customer.user_id|string, 0) %}
+                                    <span class="badge bg-primary rounded-pill">{{ session_count }}</span>
+                                </td>
+                                <td>
+                                    {% if customer.user.active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ customer.user.created_at.strftime('%Y-%m-%d') if customer.user.created_at else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="/customers/{{ customer.user_id }}" class="btn btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="/customers/{{ customer.user_id }}/sessions" class="btn btn-outline-info" title="View Sessions">
+                                            <i class="bi bi-calendar-check"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-3">This trainer has no assigned customers yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Customer Modal -->
+<div class="modal fade" id="assignCustomerModal" tabindex="-1" aria-labelledby="assignCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignCustomerModalLabel">Assign Customer to {{ trainer.user.first_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="/trainers/{{ trainer.user_id }}/assign-customer">
+                <div class="modal-body">
+                    {% if unassigned_customers %}
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">Select Customer</label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">Choose a customer...</option>
+                            {% for customer in unassigned_customers %}
+                            <option value="{{ customer.user_id }}">
+                                {{ customer.user.first_name }} {{ customer.user.last_name }} ({{ customer.user.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Only showing customers without an assigned trainer</small>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> All customers are already assigned to trainers.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {% if unassigned_customers %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Assign Customer
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

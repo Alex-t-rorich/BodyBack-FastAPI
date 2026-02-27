@@ -1,4 +1,3 @@
-# app/schemas/qr_code.py
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, field_validator

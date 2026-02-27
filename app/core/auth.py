@@ -1,4 +1,3 @@
-# app/core/auth.py
 from typing import Optional
 from uuid import UUID
 
@@ -24,27 +23,24 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    # Decode the token
+
     payload = decode_access_token(credentials.credentials)
     if payload is None:
         raise credentials_exception
-    
-    # Get user ID from token
+
     user_id_str: str = payload.get("sub")
     if user_id_str is None:
         raise credentials_exception
-    
+
     try:
         user_id = UUID(user_id_str)
     except ValueError:
         raise credentials_exception
-    
-    # Get user from database
+
     user = user_crud.get(db, id=user_id)
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 async def get_current_active_user(

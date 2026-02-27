@@ -1,4 +1,3 @@
-# app/models/customer.py
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -27,9 +26,7 @@ class Customer(Base):
     
     @property
     def is_active(self) -> bool:
-        """Check if customer is active (not soft deleted)"""
         return self.deleted_at is None
-    
+
     def has_trainer(self) -> bool:
-        """Check if customer has an assigned trainer"""
         return self.trainer_id is not None

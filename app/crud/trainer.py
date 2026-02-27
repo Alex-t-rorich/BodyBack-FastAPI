@@ -1,4 +1,3 @@
-# app/crud/trainer.py
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from uuid import UUID

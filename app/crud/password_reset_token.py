@@ -1,4 +1,3 @@
-# app/crud/password_reset_token.py
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional

@@ -148,6 +148,9 @@ cython_debug/
 *.swo
 *~
 
+# AI tools
+.claude/
+
 # Database files
 *.db
 *.sqlite

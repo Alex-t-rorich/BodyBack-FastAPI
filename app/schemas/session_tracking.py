@@ -1,4 +1,3 @@
-# app/schemas/session_tracking.py
 from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel

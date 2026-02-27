@@ -1,4 +1,3 @@
-# app/api/v1/qr_codes.py
 from datetime import datetime
 from typing import Optional
 from io import BytesIO
@@ -156,12 +155,11 @@ async def scan_qr_code(
                 "scanned_at": scan_time.isoformat()
             }
     
-    # Successful scan
     success_message = f"Valid QR code for {user.role_name.lower()} {user.full_name}"
-
+    
     # TODO: Record session tracking entry here when session tracking is implemented
     # This would create a new SessionTracking record linking the trainer and customer
-
+    
     return {
         "valid": True,
         "user_id": str(user.id),
